@@ -1,0 +1,10 @@
+IF NOT EXISTS (
+    SELECT *
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_NAME = 'Студенты' AND COLUMN_NAME = 'Балл'
+
+)
+BEGIN 
+    ALTER TABLE Студенты
+    ADD Балл INT;
+END;
