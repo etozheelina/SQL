@@ -1,28 +1,32 @@
--- Проверяем, существует ли таблица Направления, и если да, то удаляем её
-IF OBJECT_ID('dbo.Направления', 'U') IS NOT NULL
-    DROP TABLE dbo.Направления;
+-- Создаем таблицу Направления, если она не существует
+IF NOT EXISTS (
+    SELECT *
+    FROM INFORMATION_SCHEMA.TABLES
+    WHERE TABLE_NAME = 'Направления'
+)
+BEGIN
+    CREATE TABLE Направления (
+        [Код направления] INT PRIMARY KEY IDENTITY(1,1),
+        Наименование VARCHAR(100),
+        [Минимальный балл] INT
+    );
+END;
 GO
 
--- Создаем таблицу Направления
-CREATE TABLE Направления (
-    [Код направления] INT PRIMARY KEY IDENTITY(1,1),
-    Наименование VARCHAR(100),
-    [Минимальный балл] INT
-);
-GO
-
--- Вставляем данные из таблицы Студенты в таблицу Направления 
-INSERT INTO Направления (Наименование, [Минимальный балл])
-SELECT DISTINCT 'История', 160
-FROM Студенты
-WHERE Направление = 'История'
-UNION ALL
-SELECT DISTINCT 'Право', 180
-FROM Студенты
-WHERE Направление = 'Право'
-UNION ALL
-SELECT DISTINCT 'Физика', 200
-FROM Студенты
-WHERE Направление = 'Физика';
+-- Обновляем данные в таблице Направления, если они уже существуют
+MERGE INTO Направления AS target
+USING (
+    SELECT 'История' AS Направление, 160 AS [Минимальный балл]
+    UNION ALL
+    SELECT 'Право', 180
+    UNION ALL
+    SELECT 'Физика', 200
+) AS source
+ON target.Наименование = source.Направление
+WHEN MATCHED THEN 
+    UPDATE SET target.[Минимальный балл] = source.[Минимальный балл]
+WHEN NOT MATCHED THEN
+    INSERT (Наименование, [Минимальный балл])
+    VALUES (source.Направление, source.[Минимальный балл]);
 GO
 
